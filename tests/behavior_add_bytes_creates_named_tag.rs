@@ -43,27 +43,55 @@ async fn add_bytes_await_creates_tag_temp_tag_does_not() -> anyhow::Result<()> {
     let store = MemStore::new();
     assert!(tags(&store).await?.is_empty());
 
-    let info = timeout(T, store.blobs().add_bytes(Bytes::from_static(b"awaited directly"))).await??;
+    let info = timeout(
+        T,
+        store
+            .blobs()
+            .add_bytes(Bytes::from_static(b"awaited directly")),
+    )
+    .await??;
     let after_await = tags(&store).await?;
     println!("after add_bytes(..).await: returned {info:?}; tags={after_await:?}");
     assert_eq!(after_await.len(), 1);
     assert_eq!(after_await[0].hash, info.hash);
     assert_eq!(after_await[0].name, info.name);
 
-    let tt = timeout(T, store.blobs().add_bytes(Bytes::from_static(b"temp tag only")).temp_tag()).await??;
+    let tt = timeout(
+        T,
+        store
+            .blobs()
+            .add_bytes(Bytes::from_static(b"temp tag only"))
+            .temp_tag(),
+    )
+    .await??;
     let with_tt = tags(&store).await?;
-    println!("after add_bytes(..).temp_tag(): hash {}; tags={with_tt:?}", tt.hash());
+    println!(
+        "after add_bytes(..).temp_tag(): hash {}; tags={with_tt:?}",
+        tt.hash()
+    );
     assert_eq!(with_tt.len(), 1, "temp_tag() created a persistent tag");
     drop(tt);
 
     let items: Vec<io::Result<Bytes>> = vec![Ok(Bytes::from_static(b"streamed"))];
     let tt = timeout(T, async {
-        store.blobs().add_stream(n0_future::stream::iter(items)).await.temp_tag().await
+        store
+            .blobs()
+            .add_stream(n0_future::stream::iter(items))
+            .await
+            .temp_tag()
+            .await
     })
     .await??;
     let with_stream_tt = tags(&store).await?;
-    println!("after add_stream(..).temp_tag(): hash {}; tags={with_stream_tt:?}", tt.hash());
-    assert_eq!(with_stream_tt.len(), 1, "add_stream temp_tag() created a persistent tag");
+    println!(
+        "after add_stream(..).temp_tag(): hash {}; tags={with_stream_tt:?}",
+        tt.hash()
+    );
+    assert_eq!(
+        with_stream_tt.len(),
+        1,
+        "add_stream temp_tag() created a persistent tag"
+    );
     drop(tt);
 
     let end = tags(&store).await?;

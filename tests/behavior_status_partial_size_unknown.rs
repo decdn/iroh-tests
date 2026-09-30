@@ -43,7 +43,11 @@ async fn import_first_group(dst: &Store) -> anyhow::Result<Hash> {
     let tt = src.blobs().add_slice(&data).temp_tag().await?;
     let hash = tt.hash();
     let first = ChunkRanges::from(ChunkNum(0)..ChunkNum(16));
-    let bao = src.blobs().export_bao(hash, first.clone()).bao_to_vec().await?;
+    let bao = src
+        .blobs()
+        .export_bao(hash, first.clone())
+        .bao_to_vec()
+        .await?;
     dst.blobs().import_bao_bytes(hash, first, bao).await?;
     Ok(hash)
 }
@@ -60,7 +64,10 @@ async fn check(store: &Store, label: &str) -> anyhow::Result<()> {
     );
     assert_eq!(status, BlobStatus::Partial { size: None });
     assert_eq!(bitfield.size(), TOTAL);
-    assert_eq!(bitfield.ranges, ChunkRanges::from(ChunkNum(0)..ChunkNum(16)));
+    assert_eq!(
+        bitfield.ranges,
+        ChunkRanges::from(ChunkNum(0)..ChunkNum(16))
+    );
     assert_eq!(bitfield.validated_size(), None);
     Ok(())
 }

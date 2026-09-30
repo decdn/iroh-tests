@@ -55,7 +55,11 @@ async fn import_groups(dst: &Store) -> anyhow::Result<Hash> {
     let tt = src.blobs().add_slice(&data).temp_tag().await?;
     let hash = tt.hash();
     for ranges in [groups(0, 16), groups(32, 48)] {
-        let bao = src.blobs().export_bao(hash, ranges.clone()).bao_to_vec().await?;
+        let bao = src
+            .blobs()
+            .export_bao(hash, ranges.clone())
+            .bao_to_vec()
+            .await?;
         dst.blobs().import_bao_bytes(hash, ranges, bao).await?;
     }
     Ok(hash)
@@ -89,14 +93,27 @@ async fn check(store: &Store, label: &str) -> anyhow::Result<()> {
 
     for items in [&hole, &tail] {
         assert_eq!(items.first().map(String::as_str), Some("Size(262144)"));
-        assert!(!items.iter().any(|i| i.starts_with("Leaf")), "absent range emitted a Leaf: {items:?}");
+        assert!(
+            !items.iter().any(|i| i.starts_with("Leaf")),
+            "absent range emitted a Leaf: {items:?}"
+        );
         assert!(!items.iter().any(|i| i == "Done"), "{items:?}");
     }
-    assert!(hole.last().is_some_and(|l| l.contains("LeafHashMismatch") && l.contains("16")), "{hole:?}");
-    assert!(tail.last().is_some_and(|l| l.contains("UnexpectedEof")), "{tail:?}");
+    assert!(
+        hole.last()
+            .is_some_and(|l| l.contains("LeafHashMismatch") && l.contains("16")),
+        "{hole:?}"
+    );
+    assert!(
+        tail.last().is_some_and(|l| l.contains("UnexpectedEof")),
+        "{tail:?}"
+    );
 
     let ranges_err = timeout(T, async {
-        let mut stream = store.blobs().export_ranges(hash, 16 * 1024u64..32 * 1024).stream();
+        let mut stream = store
+            .blobs()
+            .export_ranges(hash, 16 * 1024u64..32 * 1024)
+            .stream();
         let mut err = None;
         while let Some(item) = stream.next().await {
             match item {

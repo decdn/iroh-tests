@@ -29,10 +29,16 @@ use iroh_blobs::Hash;
 fn hash_from_str_returns_err_on_wrong_length() {
     // 52 base32 chars encode 32 bytes; "a" is the zero symbol, so this parses.
     let valid_b32 = "a".repeat(52);
-    assert!(Hash::from_str(&valid_b32).is_ok(), "52-char base32 control parses");
+    assert!(
+        Hash::from_str(&valid_b32).is_ok(),
+        "52-char base32 control parses"
+    );
     let valid_hex = Hash::new(b"x").to_hex().to_string();
     assert_eq!(valid_hex.len(), 64);
-    assert!(Hash::from_str(&valid_hex).is_ok(), "64-char hex control parses");
+    assert!(
+        Hash::from_str(&valid_hex).is_ok(),
+        "64-char hex control parses"
+    );
 
     let inputs: Vec<(&str, String)> = vec![
         ("empty", String::new()),

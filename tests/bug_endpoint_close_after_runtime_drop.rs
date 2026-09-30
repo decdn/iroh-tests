@@ -54,7 +54,9 @@ async fn bind_endpoint(alpns: Vec<Vec<u8>>) -> anyhow::Result<Endpoint> {
 fn direct_addr(ep: &Endpoint) -> EndpointAddr {
     ep.bound_sockets()
         .into_iter()
-        .fold(EndpointAddr::new(ep.id()), |addr, sock| addr.with_ip_addr(sock))
+        .fold(EndpointAddr::new(ep.id()), |addr, sock| {
+            addr.with_ip_addr(sock)
+        })
 }
 
 /// Binds a server that accepts connections and holds each one until the peer closes it.
@@ -106,7 +108,9 @@ async fn round_with_runtime_drop(server_addr: EndpointAddr) -> anyhow::Result<bo
     .await??;
 
     let start = Instant::now();
-    let closed = tokio::time::timeout(CLOSE_DEADLINE, client.close()).await.is_ok();
+    let closed = tokio::time::timeout(CLOSE_DEADLINE, client.close())
+        .await
+        .is_ok();
     println!(
         "client.close() after runtime drop: {} after {:?}",
         if closed { "completed" } else { "timed out" },
@@ -157,9 +161,16 @@ async fn control_close_completes_when_runtime_alive() -> anyhow::Result<()> {
 
     let start = Instant::now();
     let closed = tokio::time::timeout(CLOSE_DEADLINE, client.close()).await;
-    println!("control client.close(): completed={} after {:?}", closed.is_ok(), start.elapsed());
+    println!(
+        "control client.close(): completed={} after {:?}",
+        closed.is_ok(),
+        start.elapsed()
+    );
     drop(conn);
     let _ = tokio::time::timeout(CLOSE_DEADLINE, server.close()).await;
-    assert!(closed.is_ok(), "control: Endpoint::close does not complete with a live runtime");
+    assert!(
+        closed.is_ok(),
+        "control: Endpoint::close does not complete with a live runtime"
+    );
     Ok(())
 }

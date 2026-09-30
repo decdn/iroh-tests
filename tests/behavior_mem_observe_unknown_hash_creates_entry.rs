@@ -48,10 +48,17 @@ async fn first_export_error(blobs: &iroh_blobs::api::blobs::Blobs, hash: Hash) -
 async fn mem_observe_creates_partial_entry() -> anyhow::Result<()> {
     let store = MemStore::new();
     let hash = Hash::new(b"never added");
-    assert_eq!(timeout(T, store.blobs().status(hash)).await??, BlobStatus::NotFound);
+    assert_eq!(
+        timeout(T, store.blobs().status(hash)).await??,
+        BlobStatus::NotFound
+    );
 
     let bitfield = timeout(T, store.blobs().observe(hash)).await??;
-    println!("mem first bitfield: size={} ranges={:?}", bitfield.size(), bitfield.ranges);
+    println!(
+        "mem first bitfield: size={} ranges={:?}",
+        bitfield.size(),
+        bitfield.ranges
+    );
     assert_eq!(bitfield.size(), 0);
     assert!(bitfield.ranges.is_empty());
     assert!(!bitfield.is_complete());
@@ -74,7 +81,11 @@ async fn fs_observe_leaves_hash_not_found() -> anyhow::Result<()> {
     let hash = Hash::new(b"never added");
 
     let bitfield = timeout(T, store.blobs().observe(hash)).await??;
-    println!("fs first bitfield: size={} ranges={:?}", bitfield.size(), bitfield.ranges);
+    println!(
+        "fs first bitfield: size={} ranges={:?}",
+        bitfield.size(),
+        bitfield.ranges
+    );
     assert_eq!(bitfield.size(), 0);
     assert!(!bitfield.is_complete());
 

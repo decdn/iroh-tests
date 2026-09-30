@@ -31,8 +31,17 @@ const WAIT: Duration = Duration::from_secs(3);
 const TOTAL: u64 = 256 * 1024;
 
 /// Import `ranges` of a `TOTAL`-byte blob from `src` into `dst`.
-async fn import_ranges(src: &Store, dst: &Store, hash: Hash, ranges: ChunkRanges) -> anyhow::Result<()> {
-    let bao = src.blobs().export_bao(hash, ranges.clone()).bao_to_vec().await?;
+async fn import_ranges(
+    src: &Store,
+    dst: &Store,
+    hash: Hash,
+    ranges: ChunkRanges,
+) -> anyhow::Result<()> {
+    let bao = src
+        .blobs()
+        .export_bao(hash, ranges.clone())
+        .bao_to_vec()
+        .await?;
     dst.blobs().import_bao_bytes(hash, ranges, bao).await?;
     Ok(())
 }
@@ -43,17 +52,44 @@ async fn check(dst: &Store, label: &str) -> anyhow::Result<()> {
     let tt = src.blobs().add_slice(&data).temp_tag().await?;
     let hash = tt.hash();
 
-    timeout(T, import_ranges(&src, dst, hash, ChunkRanges::from(ChunkNum(0)..ChunkNum(16)))).await??;
+    timeout(
+        T,
+        import_ranges(
+            &src,
+            dst,
+            hash,
+            ChunkRanges::from(ChunkNum(0)..ChunkNum(16)),
+        ),
+    )
+    .await??;
     let first = timeout(T, dst.blobs().observe(hash)).await??;
     assert!(!first.is_complete());
 
     let pending = timeout(WAIT, dst.blobs().observe(hash).await_completion()).await;
-    println!("{label}: await_completion on partial after {WAIT:?}: {}", if pending.is_err() { "still pending" } else { "resolved" });
-    assert!(pending.is_err(), "await_completion resolved for a partial blob: {pending:?}");
+    println!(
+        "{label}: await_completion on partial after {WAIT:?}: {}",
+        if pending.is_err() {
+            "still pending"
+        } else {
+            "resolved"
+        }
+    );
+    assert!(
+        pending.is_err(),
+        "await_completion resolved for a partial blob: {pending:?}"
+    );
 
-    timeout(T, import_ranges(&src, dst, hash, ChunkRanges::from(ChunkNum(16)..))).await??;
+    timeout(
+        T,
+        import_ranges(&src, dst, hash, ChunkRanges::from(ChunkNum(16)..)),
+    )
+    .await??;
     let done = timeout(T, dst.blobs().observe(hash).await_completion()).await??;
-    println!("{label}: after full import: complete={} size={}", done.is_complete(), done.size());
+    println!(
+        "{label}: after full import: complete={} size={}",
+        done.is_complete(),
+        done.size()
+    );
     assert!(done.is_complete());
     assert_eq!(done.size(), TOTAL);
     Ok(())

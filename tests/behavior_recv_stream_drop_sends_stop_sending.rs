@@ -49,7 +49,9 @@ async fn dropping_unfinished_recv_stream_stops_peer_with_code_zero() -> anyhow::
     let server_addr = server
         .bound_sockets()
         .into_iter()
-        .fold(EndpointAddr::new(server.id()), |addr, sock| addr.with_ip_addr(sock));
+        .fold(EndpointAddr::new(server.id()), |addr, sock| {
+            addr.with_ip_addr(sock)
+        });
 
     let (dropped_tx, dropped_rx) = tokio::sync::oneshot::channel::<()>();
     let server_ep = server.clone();

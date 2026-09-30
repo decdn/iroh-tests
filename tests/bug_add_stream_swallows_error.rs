@@ -37,17 +37,21 @@ async fn check(store: &Store, label: &str) {
         Err(io::Error::other("source stream failed")),
     ];
     let stream = n0_future::stream::iter(items);
-    let res = timeout(T, async { store.blobs().add_stream(stream).await.temp_tag().await }).await;
+    let res = timeout(T, async {
+        store.blobs().add_stream(stream).await.temp_tag().await
+    })
+    .await;
     match &res {
         Err(_) => println!("{label}: add_stream(..).temp_tag() still pending after {T:?} (hang)"),
-        Ok(Ok(tt)) => println!("{label}: add_stream(..).temp_tag() returned Ok, hash {}", tt.hash()),
+        Ok(Ok(tt)) => println!(
+            "{label}: add_stream(..).temp_tag() returned Ok, hash {}",
+            tt.hash()
+        ),
         Ok(Err(e)) => println!("{label}: add_stream(..).temp_tag() returned Err: {e:?}"),
     }
     match res {
         Ok(Err(_)) => {}
-        Err(_) => panic!(
-            "{label}: add_stream swallows the input stream error and never completes"
-        ),
+        Err(_) => panic!("{label}: add_stream swallows the input stream error and never completes"),
         Ok(Ok(tt)) => panic!(
             "{label}: add_stream swallows the input stream error and imports the truncated prefix as {}",
             tt.hash()

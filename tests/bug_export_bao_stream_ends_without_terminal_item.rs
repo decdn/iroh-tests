@@ -48,7 +48,13 @@ async fn stream_ends_with_terminal_item() -> anyhow::Result<()> {
     let tt = store.blobs().add_slice(blob()).temp_tag().await?;
     let mut stream = store
         .blobs()
-        .export_bao_with_opts(ExportBaoRequest { hash: tt.hash(), ranges: ChunkRanges::all() }, 1)
+        .export_bao_with_opts(
+            ExportBaoRequest {
+                hash: tt.hash(),
+                ranges: ChunkRanges::all(),
+            },
+            1,
+        )
         .stream();
 
     let mut count = 0usize;
@@ -85,7 +91,13 @@ async fn data_to_vec_errs_on_truncation() -> anyhow::Result<()> {
     let blobs = store.blobs().clone();
     let task = tokio::spawn(async move {
         blobs
-            .export_bao_with_opts(ExportBaoRequest { hash, ranges: ChunkRanges::all() }, 1)
+            .export_bao_with_opts(
+                ExportBaoRequest {
+                    hash,
+                    ranges: ChunkRanges::all(),
+                },
+                1,
+            )
             .data_to_vec()
             .await
     });
