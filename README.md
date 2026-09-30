@@ -4,6 +4,9 @@ Reproductions for issues found while building [deCDN](https://github.com/decdn) 
 [iroh](https://github.com/n0-computer/iroh), [iroh-blobs](https://github.com/n0-computer/iroh-blobs),
 [noq](https://github.com/n0-computer/noq) and [bao-tree](https://github.com/n0-computer/bao-tree).
 
+**Start with [FEEDBACK.md](FEEDBACK.md):** 28 items, one per section, each with its test, the
+upstream source lines and the workaround in deCDN.
+
 Every test pins exact releases: iroh 1.3.0, noq 1.3.0, iroh-blobs 0.103.0, bao-tree 0.16.1.
 Each file's module doc links the upstream source lines at the release commit and records the
 result we observed.
