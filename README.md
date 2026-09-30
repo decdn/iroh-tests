@@ -58,4 +58,5 @@ networking is local: endpoints bind 127.0.0.1 with relays disabled.
 
 ## License
 
-MIT OR Apache-2.0
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
+[MIT license](LICENSE-MIT) at your option.
