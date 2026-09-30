@@ -1,0 +1,22 @@
+[package]
+name = "iroh-tests"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.91"
+publish = false
+description = "Reproductions for issues found while building deCDN on iroh, iroh-blobs, noq and bao-tree"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/decdn/iroh-tests"
+
+# Exact pins: every test reproduces behavior at these releases. A test that
+# starts passing after a bump means the issue is fixed upstream.
+[dev-dependencies]
+iroh = "=1.3.0"
+iroh-blobs = { version = "=0.103.0", features = ["fs-store"] }
+bao-tree = { version = "=0.16.1", features = ["tokio_fsm"] }
+n0-future = "0.3"
+tokio = { version = "1", features = ["full", "test-util"] }
+bytes = "1"
+anyhow = "1"
+tempfile = "3"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
