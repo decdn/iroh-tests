@@ -30,6 +30,8 @@ iroh spawns each connection's driver onto the caller's current tokio runtime ([`
 
 **Ask:** count a dropped, never-drained connection as drained, or spawn drivers on a runtime the endpoint owns. At minimum, document on `Endpoint::connect` that the driver lives on the caller's runtime.
 
+**Upstream:** [iroh#4604](https://github.com/n0-computer/iroh/issues/4604)
+
 ### 2. `FsStore::load` hangs on a setup error
 
 **iroh-blobs · Bug · Test:** [`bug_second_fsstore_open_deadlocks`](https://github.com/decdn/iroh-tests/blob/main/tests/bug_second_fsstore_open_deadlocks.rs), both cases hang past 10 s.
@@ -41,6 +43,8 @@ A second `FsStore::load` on a directory that an open store holds hangs, and so d
 **In deCDN:** [`cache/src/engine.rs:5966`](https://github.com/decdn/decdn/blob/ef84c76aadb6e258c4aa019e06eb10b34f216282/crates/cache/src/engine.rs#L5966)
 
 **Ask:** return the setup error from `FsStore::load`, and drop the runtime off its own worker threads.
+
+**Upstream:** [iroh-blobs#252](https://github.com/n0-computer/iroh-blobs/issues/252), with our repro in [a comment](https://github.com/n0-computer/iroh-blobs/issues/252#issuecomment-6166866518)
 
 ### 3. `add_stream` hangs on a source stream error
 
@@ -56,6 +60,8 @@ In [`api/blobs.rs:273-313`](https://github.com/n0-computer/iroh-blobs/blob/e82cb
 
 **Ask:** send the source error as `AddProgressItem::Error` and drop the sender, so `temp_tag()` returns it.
 
+**Upstream:** [iroh-blobs#286](https://github.com/n0-computer/iroh-blobs/issues/286)
+
 ### 4. A `MemStore` export ends silently when the store shuts down
 
 **iroh-blobs · Bug · Test:** [`bug_export_bao_stream_ends_without_terminal_item`](https://github.com/decdn/iroh-tests/blob/main/tests/bug_export_bao_stream_ends_without_terminal_item.rs), fails in 3 of 3 runs.
@@ -68,6 +74,8 @@ On an 8 MiB blob, `shutdown()` after the third item ends the `export_bao(..).str
 
 **Ask:** emit a terminal `Error` when the channel closes early, and make `data_to_vec` and friends return `Err` on a truncated export.
 
+**Upstream:** [iroh-blobs#287](https://github.com/n0-computer/iroh-blobs/issues/287)
+
 ### 5. `Hash::from_str` panics on wrong-length input
 
 **iroh-blobs · Bug · Test:** [`bug_hash_from_str_panics`](https://github.com/decdn/iroh-tests/blob/main/tests/bug_hash_from_str_panics.rs), 7 of 7 malformed inputs panic.
@@ -78,7 +86,9 @@ In [`hash.rs:151-172`](https://github.com/n0-computer/iroh-blobs/blob/e82cbdcbda
 
 **In deCDN:** [`cache/src/origin/fs.rs:131`](https://github.com/decdn/decdn/blob/ef84c76aadb6e258c4aa019e06eb10b34f216282/crates/cache/src/origin/fs.rs#L131)
 
-**Ask:** check `BASE32_NOPAD.decode_len(input.len())` against 32 before `decode_mut` and return a parse error. We can send this as a PR.
+**Ask:** check `BASE32_NOPAD.decode_len(input.len())` against 32 before `decode_mut` and return a parse error.
+
+**Upstream:** fixed on `main` by [iroh-blobs#282](https://github.com/n0-computer/iroh-blobs/pull/282) (reported as [#277](https://github.com/n0-computer/iroh-blobs/issues/277)), not yet in a release. The test passes once a release includes it.
 
 ### 6. Empty `ChunkRanges` panic bao-tree's encoder and decoders
 
@@ -94,6 +104,8 @@ The pre-order chunk iterator has `debug_assert!(!ranges.is_empty())` ([`iter.rs:
 
 **Ask:** handle empty ranges the same way in every encoder and decoder, so the sync and fsm paths round-trip.
 
+**Upstream:** [bao-tree#81](https://github.com/n0-computer/bao-tree/issues/81)
+
 ### 7. `Bitfield::total_bytes` overflows on a range past `size`
 
 **iroh-blobs · Bug · Test:** [`bug_bitfield_total_bytes_underflow`](https://github.com/decdn/iroh-tests/blob/main/tests/bug_bitfield_total_bytes_underflow.rs), panics in debug.
@@ -105,6 +117,8 @@ The pre-order chunk iterator has `debug_assert!(!ranges.is_empty())` ([`iter.rs:
 **In deCDN:** [`cache/src/engine.rs:819`](https://github.com/decdn/decdn/blob/ef84c76aadb6e258c4aa019e06eb10b34f216282/crates/cache/src/engine.rs#L819)
 
 **Ask:** clamp spans to `size` in `Bitfield::new` or in `total_bytes`.
+
+**Upstream:** [iroh-blobs#288](https://github.com/n0-computer/iroh-blobs/issues/288)
 
 ## Behaviors behind a request
 
