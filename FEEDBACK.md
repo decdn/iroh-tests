@@ -82,7 +82,7 @@ In [`hash.rs:151-172`](https://github.com/n0-computer/iroh-blobs/blob/e82cbdcbda
 
 ### 6. Empty `ChunkRanges` panic bao-tree's encoder and decoders
 
-**bao-tree · Bug · Test:** [`bug_bao_tree_async_encode_empty_ranges`](https://github.com/decdn/iroh-tests/blob/main/tests/bug_bao_tree_async_encode_empty_ranges.rs), 2 of 3 cases fail.
+**bao-tree · Bug · Test:** [`bug_bao_tree_async_encode_empty_ranges`](https://github.com/decdn/iroh-tests/blob/main/tests/bug_bao_tree_async_encode_empty_ranges.rs), 3 of 4 cases fail.
 
 The pre-order chunk iterator has `debug_assert!(!ranges.is_empty())` ([`iter.rs:547`](https://github.com/n0-computer/bao-tree/blob/2be9abd144783455606424424c29bd3a57f926f8/src/iter.rs#L547)). The sync encoder short-circuits empty ranges ([`io/sync.rs:484-486`](https://github.com/n0-computer/bao-tree/blob/2be9abd144783455606424424c29bd3a57f926f8/src/io/sync.rs#L484-L486)); the fsm encoder ([`io/fsm.rs:586-599`](https://github.com/n0-computer/bao-tree/blob/2be9abd144783455606424424c29bd3a57f926f8/src/io/fsm.rs#L586-L599)) and both decoders ([`io/sync.rs:321-339`](https://github.com/n0-computer/bao-tree/blob/2be9abd144783455606424424c29bd3a57f926f8/src/io/sync.rs#L321-L339)) do not. In debug builds they panic, for a 0-byte blob and a 48 KiB blob alike. In release builds the two encoders disagree: the fsm encoder writes 64 bytes (the root pair) for the 48 KiB blob, the sync encoder writes 0, and both decoders reject the sync output with `ParentNotFound`.
 

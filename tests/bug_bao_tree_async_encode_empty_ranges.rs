@@ -24,6 +24,8 @@
 //! - `sync_decode_of_sync_empty_encoding_succeeds`: the sync decoder with empty ranges
 //!   accepts the (empty) output of the sync encoder with the correct root. Fails: it
 //!   panics at the same assert.
+//! - `fsm_decode_of_sync_empty_encoding_succeeds`: the async `decode_ranges` with empty
+//!   ranges accepts the same input. Fails: the task panics at the same assert.
 //!
 //! Each test runs for a 0-byte blob and a 3 chunk group blob (block size
 //! `BlockSize::from_chunk_log(4)`, 48 KiB).
@@ -139,6 +141,36 @@ fn sync_decode_of_sync_empty_encoding_succeeds() {
             )),
             Ok(Err(e)) => failures.push(format!("len={len}: sync decode returned {e:?}")),
             Ok(Ok(())) => {}
+        }
+    }
+    assert!(failures.is_empty(), "{failures:#?}");
+}
+
+#[tokio::test]
+async fn fsm_decode_of_sync_empty_encoding_succeeds() {
+    let mut failures = Vec::new();
+    for len in LENGTHS {
+        let data = blob(len);
+        let ob = PostOrderMemOutboard::create(&data, BLOCK_SIZE);
+        let encoded = Bytes::from(sync_encode_empty(&data, &ob));
+        let eob = EmptyOutboard {
+            tree: ob.tree,
+            root: ob.root,
+        };
+
+        let task = tokio::spawn(async move {
+            let mut target = Vec::<u8>::new();
+            bao_tree::io::fsm::decode_ranges(encoded, ChunkRanges::empty(), &mut target, eob).await
+        });
+        match tokio::time::timeout(std::time::Duration::from_secs(10), task).await {
+            Err(_) => failures.push(format!("len={len}: fsm decode timed out")),
+            Ok(Err(join)) if join.is_panic() => failures.push(format!(
+                "len={len}: fsm decode panicked: {}",
+                panic_message(&*join.into_panic())
+            )),
+            Ok(Err(join)) => failures.push(format!("len={len}: fsm decode task failed: {join}")),
+            Ok(Ok(Err(e))) => failures.push(format!("len={len}: fsm decode returned {e:?}")),
+            Ok(Ok(Ok(()))) => {}
         }
     }
     assert!(failures.is_empty(), "{failures:#?}");
